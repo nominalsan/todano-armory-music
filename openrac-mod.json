@@ -2,7 +2,7 @@
   "format": 2,
   "id": "todano-armory-music",
   "name": "Todano Armory music",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "nominalsan",
   "description": "On Todano, walking into the Megacorp Armory leaves the outside music playing: the entrance's trigger asks for no track. This mod asks for the Armory's track when that trigger fires, crossfading as the game does.",
   "license": "GPL-3.0-or-later",
@@ -11,7 +11,8 @@
   "multiplayer": "gameplay",
   "games": {
     "rac2": [
-      "ntsc"
+      "ntsc",
+      "pal"
     ]
   },
   "settings": [

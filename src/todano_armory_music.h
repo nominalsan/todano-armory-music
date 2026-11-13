@@ -2,8 +2,9 @@
  * Todano's Armory music (README.md): the rules the mod applies, apart from the host, so the tests
  * can run them on memory of their own.
  *
- * Going Commando NTSC-U (USA v1.01), level 12 (Todano). The addresses and layouts below come from
- * rac2-decomp (github.com/OpenRAC/rac2-decomp), measured against the retail level program:
+ * Going Commando NTSC-U (USA v1.01) and PAL (Europe v1.00, SCES_516.07), level 12 (Todano). The
+ * addresses and layouts below come from rac2-decomp (github.com/OpenRAC/rac2-decomp), measured
+ * against both retail level programs (NTSC-U addresses named; the PAL ones in tam_discs):
  *
  * - Class 4475's update (func_L12_004254A8, src/levels/12_todano/L12_0041E3E8.c): while its state
  *   byte (+0x20) is 0 and the hero's position (D_00189EA0) is in the cuboid its first pvar names
@@ -17,7 +18,7 @@
  *   D_L12_001B2F10 rows at *D_L12_001B2F40, 32 bytes each, the position u16 x, y, z at +4 in
  *   quarter units and the music track a short at +0xC. On a warp the game takes the nearest row
  *   within 400 units and starts its track, but only when no track plays.
- * - The track request (func_L01_00323310 at 0x003329B0 in level 12,
+ * - The track request (func_L01_00323310 at 0x003329B0 in level 12, 0x00334A48 on PAL,
  *   src/levels/shared/L01_00323310-pre.c): void(int track, int transition), -1 for no transition:
  *   the music system crossfades to the track.
  */
@@ -33,21 +34,37 @@
 /* The class whose update fires at the Armory's entrance. */
 #define TAM_TRIGGER_CLASS 4475
 
-/* Todano's globals (relocate_level_data(12, ...)). */
+/* Todano's globals (relocate_level_data(12, ...)): the same on both discs (PAL's level program
+ * reads them at these addresses too). */
 #define TAM_MOBYS_FIRST 0x001B2E9Cu
 #define TAM_MOBYS_END 0x001B2EA0u
 #define TAM_PRESET_COUNT 0x001B2F10u
 #define TAM_PRESET_TABLE 0x001B2F40u
 
-/* The executable's hero position, x y z floats (relocate_data). */
-#define TAM_HERO_POSITION 0x00189EA0u
+/* What differs between the discs. Each address is that disc's: PAL's from the same functions in
+ * its Todano program (func_L12_004254A8 is at 0x0042A960 there, and reads the hero at 0x00189F20
+ * and calls IsPointInCuboid at 0x003260A0; config/pal/levels/functions.tsv places the rest). */
+typedef struct tam_disc {
+    const char* version;   /* the host's api->version */
+    uint32_t hero;         /* the executable's hero position, x y z floats (relocate_data) */
+    uint32_t request;      /* func_L01_00323310 in Todano's program (function_at) */
+    uint32_t in_cuboid;    /* IsPointInCuboid (func_002ACBC8) in Todano's program (function_at):
+                              int(point, cuboid), nonzero when the point is in the cuboid */
+} tam_disc;
 
-/* func_L01_00323310 in Todano's program (function_at). */
-#define TAM_REQUEST_TRACK 0x003329B0u
+static const tam_disc tam_discs[] = {
+    {"ntsc", 0x00189EA0u, 0x003329B0u, 0x00324168u},
+    {"pal", 0x00189F20u, 0x00334A48u, 0x003260A0u},
+};
 
-/* IsPointInCuboid (func_002ACBC8) in Todano's program (function_at): int(point, cuboid), nonzero
- * when the point is in the cuboid. */
-#define TAM_POINT_IN_CUBOID 0x00324168u
+/* The addresses for the disc `version`, null for a disc the mod does not know. */
+static inline const tam_disc* tam_disc_for(const char* version) {
+    for (size_t i = 0; i < sizeof tam_discs / sizeof tam_discs[0]; ++i) {
+        if (strcmp(tam_discs[i].version, version) == 0)
+            return &tam_discs[i];
+    }
+    return NULL;
+}
 
 /* A moby's layout: its pvars at +0x68, whose first word is class 4475's cuboid (-1 for none). */
 #define TAM_MOBY_SIZE 0x100u

@@ -4,7 +4,9 @@ On Todano, walking into the Megacorp Armory leaves the outside music playing. Th
 to the Armory's track as Ratchet walks in, with the crossfade the game uses for its own track
 changes.
 
-Going Commando, NTSC-U (USA v1.01) only. Native mod, OpenRAC mod interface 1.0 or newer.
+Going Commando, NTSC-U (USA v1.01) and PAL (*Locked and Loaded*, Europe v1.00, `SCES_516.07`).
+Not the USA v2.00 Greatest Hits disc. Native mod for Linux and Windows (x86_64), OpenRAC mod
+interface 1.0 or newer.
 
 ## Why the track does not change
 
@@ -60,14 +62,35 @@ and add it as a mod in OpenRAC.
 
 ## Build
 
+Get the OpenRAC mod SDK that `sdk.lock` pins once (into `.sdk/`):
+
 ```sh
-python3 tools/fetch_sdk.py        # the OpenRAC mod SDK that sdk.lock pins, into .sdk/
+python3 tools/fetch_sdk.py
+```
+
+Linux:
+
+```sh
 cmake -S . -B build -G Ninja
 cmake --build build && ctest --test-dir build
 python3 .sdk/openrac-mod-sdk-*/tools/package_mod.py build/package/todano_armory_music -o dist
 ```
 
+Windows, cross-compiled from Linux with MinGW-w64 (`x86_64-w64-mingw32-gcc`, on Debian and Ubuntu
+the `gcc-mingw-w64-x86-64` package) through the toolchain file in `cmake/`:
+
+```sh
+cmake -S . -B build-windows -G Ninja -DBUILD_TESTING=OFF \
+      -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-x86_64.cmake
+cmake --build build-windows
+python3 .sdk/openrac-mod-sdk-*/tools/package_mod.py build-windows/package/todano_armory_music -o dist
+```
+
+Each gives `dist/todano-armory-music-<version>-<platform>.zip`. On Windows itself, the Linux
+commands work as they are with Visual Studio's compiler.
+
 ## Tests
 
 `ctest` runs the rules on memory laid out by the test: the nearest preset
-within range, finding the trigger, and the entry watch firing each time Ratchet walks in.
+within range, finding the trigger, the entry watch firing each time Ratchet walks in, and each
+disc's addresses.

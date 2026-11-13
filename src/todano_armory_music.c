@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later
- * Todano's Armory music (README.md): Going Commando NTSC-U. When Ratchet walks into the Megacorp
+ * Todano's Armory music (README.md): Going Commando NTSC-U and PAL. When Ratchet walks into the Megacorp
  * Armory on Todano, class 4475 at its entrance fires, but the game asks for no music there, so the
  * outside track goes on playing. This mod asks for the Armory's track at that moment.
  *
@@ -20,7 +20,7 @@
 #include "openrac/openrac_mod.h"
 #include "todano_armory_music.h"
 
-OPENRAC_MOD_DEFINE("todano-armory-music", "0.3.0")
+OPENRAC_MOD_DEFINE("todano-armory-music", "0.4.0")
 
 /* ---- State (set at load, then touched only on the game thread, in tick) ---- */
 
@@ -29,6 +29,9 @@ static openrac_mod* s_mod;
 
 /* The "track" setting: -1 for the nearest preset's. */
 static int s_track_setting = -1;
+
+/* This disc's addresses (todano_armory_music.h). */
+static const tam_disc* s_disc;
 
 /* The level read last, -1 for none. */
 static int s_level = -1;
@@ -71,7 +74,7 @@ static int choose_track(void) {
     {
         const uint32_t count_at = s_api->relocate_level_data(TAM_LEVEL, TAM_PRESET_COUNT);
         const uint32_t table_at = s_api->relocate_level_data(TAM_LEVEL, TAM_PRESET_TABLE);
-        const uint32_t hero_at = s_api->relocate_data(TAM_HERO_POSITION);
+        const uint32_t hero_at = s_api->relocate_data(s_disc->hero);
         int32_t count;
         uint32_t rows;
         float hero[3];
@@ -103,9 +106,11 @@ static int choose_track(void) {
 static void request_track(int track) {
     typedef void (*request_fn)(int32_t track, int32_t transition);
     char line[96];
-    request_fn request = (request_fn)s_api->function_at(TAM_REQUEST_TRACK);
+    request_fn request = (request_fn)s_api->function_at(s_disc->request);
     if (request == NULL) {
-        log_info("Todano's track request (0x003329B0) is not in this OpenRAC: no music change");
+        snprintf(line, sizeof line, "Todano's track request (0x%08X) is not in this OpenRAC: no music change",
+                 (unsigned)s_disc->request);
+        log_info(line);
         return;
     }
     request(track, -1);
@@ -116,8 +121,8 @@ static void request_track(int track) {
 /* Whether Ratchet is in `cuboid` now, by the game's own test; -1 when it cannot be asked. */
 static int hero_in_cuboid(int32_t cuboid) {
     typedef int32_t (*in_cuboid_fn)(openrac_gaddr point, int32_t cuboid);
-    const uint32_t hero_at = s_api->relocate_data(TAM_HERO_POSITION);
-    in_cuboid_fn in_cuboid = (in_cuboid_fn)s_api->function_at(TAM_POINT_IN_CUBOID);
+    const uint32_t hero_at = s_api->relocate_data(s_disc->hero);
+    in_cuboid_fn in_cuboid = (in_cuboid_fn)s_api->function_at(s_disc->in_cuboid);
     if (in_cuboid == NULL || !in_ram(hero_at, 16))
         return -1;
     return in_cuboid(hero_at, cuboid) != 0;
@@ -194,15 +199,16 @@ OPENRAC_MOD_EXPORT int openrac_mod_load(const openrac_api* api, openrac_mod* mod
     s_cuboid = -1;
     s_inside = -1;
 
-    // The addresses are Going Commando USA v1.01's level program for Todano.
+    // The addresses are Going Commando's level program for Todano, USA v1.01 or Europe v1.00.
     if (strcmp(api->game, "rac2") != 0) {
         api->fail(mod, "todano-armory-music is for Ratchet & Clank: Going Commando (rac2)");
         return 1;
     }
-    if (strcmp(api->version, "ntsc") != 0) {
-        char reason[96];
-        snprintf(reason, sizeof reason, "todano-armory-music knows the NTSC-U disc, not %s",
-                 api->version);
+    s_disc = tam_disc_for(api->version);
+    if (s_disc == NULL) {
+        char reason[112];
+        snprintf(reason, sizeof reason,
+                 "todano-armory-music knows the NTSC-U v1.01 and PAL discs, not %s", api->version);
         api->fail(mod, reason);
         return 1;
     }

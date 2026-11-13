@@ -94,10 +94,22 @@ static void entry_watch(void) {
     }
 }
 
+static void discs(void) {
+    const tam_disc* ntsc = tam_disc_for("ntsc");
+    const tam_disc* pal = tam_disc_for("pal");
+    CHECK(ntsc != NULL && ntsc->hero == 0x00189EA0u && ntsc->request == 0x003329B0u &&
+          ntsc->in_cuboid == 0x00324168u);
+    CHECK(pal != NULL && pal->hero == 0x00189F20u && pal->request == 0x00334A48u &&
+          pal->in_cuboid == 0x003260A0u);
+    CHECK(tam_disc_for("ntsc2") == NULL);
+    CHECK(tam_disc_for("") == NULL);
+}
+
 int main(void) {
     nearest_preset();
     trigger_watch();
     entry_watch();
+    discs();
     if (failures) {
         fprintf(stderr, "%d failed\n", failures);
         return 1;
