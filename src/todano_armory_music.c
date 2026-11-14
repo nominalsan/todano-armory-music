@@ -10,9 +10,9 @@
  * On other levels the tick is one comparison.
  *
  * When Ratchet walks into the cuboid, the mod asks for a track through the game's own
- * request (func_L01_00323310, which crossfades): the "track" setting's, or with -1 the track of the
- * environment preset nearest Ratchet, the one the game itself plays when it puts him there. The
- * addresses are in todano_armory_music.h.
+ * request (func_L01_00323310, which crossfades): the track of the environment preset nearest
+ * Ratchet, the one the game itself plays when it puts him there. The addresses are in
+ * todano_armory_music.h.
  */
 #include <stdio.h>
 #include <string.h>
@@ -20,15 +20,12 @@
 #include "openrac/openrac_mod.h"
 #include "todano_armory_music.h"
 
-OPENRAC_MOD_DEFINE("todano-armory-music", "0.4.0")
+OPENRAC_MOD_DEFINE("todano-armory-music", "0.5.0")
 
 /* ---- State (set at load, then touched only on the game thread, in tick) ---- */
 
 static const openrac_api* s_api;
 static openrac_mod* s_mod;
-
-/* The "track" setting: -1 for the nearest preset's. */
-static int s_track_setting = -1;
 
 /* This disc's addresses (todano_armory_music.h). */
 static const tam_disc* s_disc;
@@ -65,12 +62,9 @@ static int moby_array(uint32_t* first, uint32_t* end) {
            (*end - *first) / TAM_MOBY_SIZE <= TAM_MOBYS_MAX;
 }
 
-/* The track for Ratchet where he is now: the setting's, or the nearest preset's. -1 for none. */
+/* The track for Ratchet where he is now: the nearest preset's. -1 for none. */
 static int choose_track(void) {
     char line[160];
-    if (s_track_setting >= 0)
-        return s_track_setting;
-
     {
         const uint32_t count_at = s_api->relocate_level_data(TAM_LEVEL, TAM_PRESET_COUNT);
         const uint32_t table_at = s_api->relocate_level_data(TAM_LEVEL, TAM_PRESET_TABLE);
@@ -185,11 +179,11 @@ static void tick(void* user) {
         if (track >= 0)
             request_track(track);
         else
-            log_info("the Armory's entrance: no track to ask for (set \"track\")");
+            log_info("the Armory's entrance: no environment preset in range: no track to ask for");
     }
 }
 
-/* Called by the host when it loads the library: checks the game and the disc, reads the setting and
+/* Called by the host when it loads the library: checks the game and the disc and
  * registers the tick callback. Returns 0 on success; on failure it tells the host why. */
 OPENRAC_MOD_EXPORT int openrac_mod_load(const openrac_api* api, openrac_mod* mod) {
     s_api = api;
@@ -211,11 +205,6 @@ OPENRAC_MOD_EXPORT int openrac_mod_load(const openrac_api* api, openrac_mod* mod
                  "todano-armory-music knows the NTSC-U v1.01 and PAL discs, not %s", api->version);
         api->fail(mod, reason);
         return 1;
-    }
-
-    {
-        const int64_t track = api->setting_int(mod, "track");
-        s_track_setting = track >= 0 && track <= 255 ? (int)track : -1;
     }
 
     if (api->on_frame(mod, tick, NULL) != 0) {

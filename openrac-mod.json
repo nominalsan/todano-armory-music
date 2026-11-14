@@ -2,9 +2,9 @@
   "format": 2,
   "id": "todano-armory-music",
   "name": "Todano Armory music",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "nominalsan",
-  "description": "On Todano, walking into the Megacorp Armory leaves the outside music playing: the entrance's trigger asks for no track. This mod asks for the Armory's track when that trigger fires, crossfading as the game does.",
+  "description": "On Todano, walking into the Megacorp Armory leaves the outside music playing: the entrance's trigger asks for no track. This mod asks for the Armory's track each time Ratchet walks in, crossfading as the game does.",
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/nominalsan/todano-armory-music",
   "api": "1.0",
@@ -14,16 +14,5 @@
       "ntsc",
       "pal"
     ]
-  },
-  "settings": [
-    {
-      "key": "track",
-      "name": "Track",
-      "type": "int",
-      "default": -1,
-      "min": -1,
-      "max": 255,
-      "description": "The music track to play in the Armory. -1: the track of the environment preset nearest Ratchet when he walks in, the one the game itself plays when it puts him there."
-    }
-  ]
+  }
 }

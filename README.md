@@ -25,16 +25,9 @@ music, and nothing in the game reads that flag back by its address, so walking i
 
 On Todano the mod looks for the class-4475 trigger until it finds it, then asks the game once a
 tick (IsPointInCuboid) whether Ratchet is in the trigger's cuboid. When he walks in, the mod asks
-the game's music for a track through the same request the Teleporter uses:
-
-- **Track** `-1` (the default): the track of the environment preset nearest Ratchet at that
-  moment, the one the game would play had it put him there (nearest within 400 units, as the
-  game).
-- **Track** `0` to `255`: that track.
-
-The log says which preset and track it chose. If the default picks the outside track (the
-nearest preset can be the one outside the door), set **Track** to the Armory's number from that
-log or from a level editor.
+the game's music for a track through the same request the Teleporter uses: the track of the
+environment preset nearest Ratchet at that moment, the one the game would play had it put him
+there (nearest within 400 units, as the game). The log says which preset and track it chose.
 
 The mod does not follow the trigger's own state: that is a one-shot for the story, and once the
 Armory has been played through the trigger is already done whenever Todano loads, so a mod waiting
@@ -46,14 +39,8 @@ the game's preset plays then). The track stays when Ratchet walks back out, unti
 changes it (a teleporter, a puzzle, a respawn). Going Commando has no hook points yet
 ([MODS.md](https://github.com/OpenRAC/OpenRAC/blob/master/docs/port/MODS.md), section 4), so the
 mod watches the cuboid from the tick callback: one call into the game's cuboid test a tick on
-Todano, a single comparison on other levels. It only reads game memory
-and calls the game's own request function.
-
-## Settings
-
-| Key | Type | Default | What |
-|---|---|---|---|
-| `track` | int | `-1` | the Armory's track, `-1` for the nearest preset's |
+Todano, a single comparison on other levels. It only reads game memory and calls the game's own
+request function. It has no settings.
 
 ## Install
 
