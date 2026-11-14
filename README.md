@@ -94,3 +94,7 @@ commands work as they are with Visual Studio's compiler.
 `ctest` runs the rules on memory laid out by the test: the nearest preset
 within range, finding the trigger, the entry watch firing each time Ratchet walks in, and each
 disc's addresses.
+
+## AI
+
+This Mod is written completely from Claude and this sentence is the only one written from a human.
